@@ -1,0 +1,134 @@
+[tool.poetry]
+name = "madlibs-template" # change me!
+version = "0.0.0"
+description = "A template repo for madlibs team." # change me!
+authors = [ # change these!
+    "Colin Dean <colin.dean@target.com>",
+    "Prashanth Sandela <Prashanth.Sandela@target.com>",
+    "Cole Stiegler <Cole.Stiegler@target.com>"
+]
+packages = [
+    { include = "training" },
+    { include = "server" }
+]
+
+[[tool.poetry.source]]
+name = "tgt-pypi-mirror"
+url = "https://binrepo.target.com/artifactory/api/pypi/pypi-remote/simple"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "tgt-python"
+url = "https://binrepo.target.com/artifactory/api/pypi/tgt-python/simple"
+priority = "supplemental"
+
+[[tool.poetry.source]]
+name = "tgt-mosaic"
+url = "https://binrepo.target.com/artifactory/api/pypi/mosaicml/simple"
+priority = "explicit"
+
+[[tool.poetry.source]]
+name = "tgt-madlibs"
+url = "https://binrepo.target.com/artifactory/api/pypi/madlibs/simple"
+priority = "explicit"
+
+[[tool.poetry.source]]
+# This source is used only for publishing since Poetry doesn't like /simple in publish URLs.
+name = "tgt-madlibs-publish"
+url = "https://binrepo.target.com/artifactory/api/pypi/madlibs"
+priority = "explicit"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+click = "^8"
+tgt-certs = { version = ">=2022", source = "tgt-python" }
+mosaicml = { version = ">=1.6", source = "tgt-mosaic" }
+madlibs-tools = {version = ">=0.15", source = "tgt-madlibs" }
+scikit-learn = ">=1.4.0"
+nltk = ">=3.8.1"
+bertopic = ">=0.16.0"
+pyarrow= "*"
+
+[tool.poetry.group.dev.dependencies]
+## Experimentation
+# Do not rely on Jupyer for production. It's a local development tool.
+jupyterlab = "^4"
+notebook = "^7"
+nbstripout = "*"
+## Testing and reporting
+pytest = ">=7"
+pytest-html = "*"
+ansi2html = "*"
+pytest-tap = "*"
+pytest-cov = "*"
+pytest-mypy = "*"
+## Code quality
+black = { version = ">=22", extras = ["jupyter"] }
+flake8 = ">=5"
+# this is a lightweight wrapper around flake8 that reads pyproject.toml for config
+# TODO: Use Flakeheaven instead if it survives https://github.com/flakeheaven/flakeheaven
+flake8-pyproject = ">=1"
+# type checker
+mypy = "*"
+# xml library, used for outputting HTML reports from mypy, etc.
+lxml = "*"
+
+
+[tool.black]
+# 119 = GitHub wrapping
+line-length = 119
+target-version = ['py39']
+include = '\.pyi?$|\.ipynb$'
+
+[tool.flake8]
+## opt-in to almost everything
+# https://flake8.pycqa.org/en/latest/user/violations.html#selecting-violations-with-flake8
+select = ['B','C','E','F','W','T4','B9']
+## but turn some off
+# E203: Whitespace before ':'
+# E231: missing whitespace after comma; black takes care of this
+# E266: Too many leading '#' for block comment
+# E501: Line too long (82 &gt; 79 characters)
+# W503: Line break occurred before a binary operator
+ignore = ['E203', 'E266', 'E501', 'W503', 'E231']
+# 119 = GitHub wrapping
+max-line-length = 119
+# limit cyclomatic complexity
+max-complexity = 18
+## don't run on these files/dirs
+exclude = ['.venv','.*', 'dist']
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests"]
+# -vvvv = as verbose as it gets
+# -ra = show extra test summary for all except passed
+# coverage options passed via pytest-cov and reporting output in HTML, JUNIT, and TAP form
+addopts = """
+    -vvvv -ra --quiet \
+    --cov --cov-report xml --cov-report html --cov-report term \
+    --junit-xml=build/report.junit.xml --html=build/report.html --self-contained-html \
+    --tap-outdir=build --tap-combined \
+    --durations=10
+"""
+
+# Configure coverage.py, which is enabled in the pytest addopts above
+[tool.coverage.run]
+branch = true
+[tool.coverage.report]
+skip_empty = true
+[tool.coverage.html]
+directory = "build/coverage"
+[tool.coverage.xml]
+output = "build/coverage/coverage.xml"
+[tool.coverage.paths]
+source = ["training","server"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
